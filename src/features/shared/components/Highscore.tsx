@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 // should maybe live inside a useHighscore instead.
-
+import { useFetch } from "../hooks/useFetch";
 type Skills = {
   overall: number;
   attack: number;
@@ -36,41 +36,9 @@ type User = {
 
 const ApiUrl: string = "/api/hiscore?table=0&category=0&size=50";
 function Highscore() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: users, isLoading, error } = useFetch<User[]>(ApiUrl);
 
-  useEffect(() => {
-    const controller = new AbortController();
-
-    const fetchTop50 = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const response = await fetch(ApiUrl, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          signal: controller.signal,
-        });
-        if (!response.ok) {
-          throw new Error(`Request failed: ${response.status}`);
-        }
-        const users = (await response.json()) as User[];
-        console.log(users);
-        setUsers(users);
-      } catch (e) {
-        if ((e as Error).name === "AbortError") {
-          return;
-        }
-        setError((e as Error).message);
-      }
-    };
-
-    fetchTop50();
-    return () => controller.abort();
-  }, []);
+  const controller = new AbortController();
 
   if (isLoading) {
     return <p>Loading...</p>;
@@ -80,7 +48,7 @@ function Highscore() {
   }
   return (
     <ul>
-      {users.map((u) => (
+      {users?.map((u) => (
         <li key={u.rank}>
           {u.rank}. {u.name} — {u.score}
         </li>

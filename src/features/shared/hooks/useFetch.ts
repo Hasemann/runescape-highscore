@@ -19,7 +19,7 @@ function useFetch<T>(url: string): FetchState<T> {
       try {
         setState((s) => ({ ...s, isLoading: true, error: null }));
         const response = await fetch(url, { signal: controller.signal });
-        if (response.ok) {
+        if (!response.ok) {
           throw new Error(`Request failed: ${response.status}`);
         }
         const data = (await response.json()) as T;
@@ -28,6 +28,8 @@ function useFetch<T>(url: string): FetchState<T> {
         if ((error as Error).name === "AbortError") {
           return;
         }
+        console.log(error);
+
         setState({
           data: null,
           isLoading: false,
@@ -36,7 +38,9 @@ function useFetch<T>(url: string): FetchState<T> {
       }
     };
     execute();
+
     return () => controller.abort();
   }, [url]);
   return state;
 }
+export { useFetch };
